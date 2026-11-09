@@ -1,0 +1,1171 @@
+-- BrookHaven Script Folder
+-- Full script — v3.1
+-- Made By: dotModelx
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local ContextActionService = game:GetService("ContextActionService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui", 10)
+if not playerGui then
+    warn("[BrookHaven] Could not find PlayerGui")
+    return
+end
+
+local old = playerGui:FindFirstChild("BrookHavenScriptFolder")
+if old then old:Destroy() end
+
+-- =========================================================
+-- Root ScreenGui
+-- =========================================================
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BrookHavenScriptFolder"
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 999
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+screenGui.IgnoreGuiInset = true
+
+local ok = pcall(function() screenGui.Parent = playerGui end)
+if not ok or not screenGui.Parent then
+    pcall(function() screenGui.Parent = CoreGui end)
+end
+if not screenGui.Parent then
+    warn("[BrookHaven] Could not parent ScreenGui")
+    return
+end
+
+-- =========================================================
+-- SILENT SAFETY GUARD
+-- =========================================================
+task.spawn(function()
+    while screenGui and screenGui.Parent do
+        task.wait(3)
+        local pg = player:FindFirstChild("PlayerGui")
+        if pg then
+            if screenGui.Parent ~= pg then
+                pcall(function() screenGui.Parent = pg end)
+            end
+            for _, g in ipairs(pg:GetChildren()) do
+                if g ~= screenGui and g.Name == "BrookHavenScriptFolder" then
+                    pcall(function() g:Destroy() end)
+                end
+            end
+        end
+    end
+end)
+
+-- =========================================================
+-- LOADING SCREEN BUILDER
+-- =========================================================
+local function buildLoadingScreen(titleText, subtitleText, showProgress)
+    local root = Instance.new("Frame")
+    root.Name = "LoadingScreen"
+    root.Size = UDim2.new(1, 0, 1, 0)
+    root.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    root.BackgroundTransparency = 1
+    root.BorderSizePixel = 0
+    root.ZIndex = 100
+    root.Parent = screenGui
+
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(0, 460, 0, 240)
+    container.AnchorPoint = Vector2.new(0.5, 0.5)
+    container.Position = UDim2.new(0.5, 0, 0.5, 0)
+    container.BackgroundTransparency = 1
+    container.ZIndex = 101
+    container.Parent = root
+
+    local layout = Instance.new("UIListLayout")
+    layout.FillDirection = Enum.FillDirection.Vertical
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.VerticalAlignment = Enum.VerticalAlignment.Center
+    layout.Padding = UDim.new(0, 16)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = container
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 56)
+    title.BackgroundTransparency = 1
+    title.Text = titleText
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 42
+    title.Font = Enum.Font.GothamBold
+    title.TextTransparency = 1
+    title.TextXAlignment = Enum.TextXAlignment.Center
+    title.LayoutOrder = 1
+    title.ZIndex = 102
+    title.Parent = container
+
+    local subtitle = Instance.new("TextLabel")
+    subtitle.Size = UDim2.new(1, 0, 0, 24)
+    subtitle.BackgroundTransparency = 1
+    subtitle.Text = subtitleText
+    subtitle.TextColor3 = Color3.fromRGB(160, 160, 200)
+    subtitle.TextSize = 15
+    subtitle.Font = Enum.Font.Gotham
+    subtitle.TextTransparency = 1
+    subtitle.TextXAlignment = Enum.TextXAlignment.Center
+    subtitle.LayoutOrder = 2
+    subtitle.ZIndex = 102
+    subtitle.Parent = container
+
+    local spacer = Instance.new("Frame")
+    spacer.Size = UDim2.new(1, 0, 0, 20)
+    spacer.BackgroundTransparency = 1
+    spacer.LayoutOrder = 3
+    spacer.ZIndex = 102
+    spacer.Parent = container
+
+    local progressText = Instance.new("TextLabel")
+    progressText.Size = UDim2.new(1, 0, 0, 24)
+    progressText.BackgroundTransparency = 1
+    progressText.Text = showProgress and "Loading Assets 0%" or ""
+    progressText.TextColor3 = Color3.fromRGB(200, 200, 220)
+    progressText.TextSize = 15
+    progressText.Font = Enum.Font.GothamMedium
+    progressText.TextTransparency = 1
+    progressText.TextXAlignment = Enum.TextXAlignment.Center
+    progressText.LayoutOrder = 4
+    progressText.ZIndex = 102
+    progressText.Parent = container
+
+    local barTrack = Instance.new("Frame")
+    barTrack.Size = UDim2.new(0, 360, 0, 8)
+    barTrack.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    barTrack.BackgroundTransparency = 1
+    barTrack.BorderSizePixel = 0
+    barTrack.LayoutOrder = 5
+    barTrack.ZIndex = 102
+    barTrack.Parent = container
+
+    local barTrackCorner = Instance.new("UICorner")
+    barTrackCorner.CornerRadius = UDim.new(1, 0)
+    barTrackCorner.Parent = barTrack
+
+    local barFill = Instance.new("Frame")
+    barFill.Size = UDim2.new(0, 0, 1, 0)
+    barFill.BackgroundColor3 = Color3.fromRGB(90, 120, 255)
+    barFill.BackgroundTransparency = 1
+    barFill.BorderSizePixel = 0
+    barFill.ZIndex = 103
+    barFill.Parent = barTrack
+
+    local barFillCorner = Instance.new("UICorner")
+    barFillCorner.CornerRadius = UDim.new(1, 0)
+    barFillCorner.Parent = barFill
+
+    local barFillGradient = Instance.new("UIGradient")
+    barFillGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(90, 120, 255)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 90, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(90, 120, 255))
+    }
+    barFillGradient.Parent = barFill
+
+    local function fadeIn()
+        local FADE = 0.45
+        local EASE = TweenInfo.new(FADE, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        TweenService:Create(root, EASE, { BackgroundTransparency = 0 }):Play()
+        TweenService:Create(container, EASE, { Size = UDim2.new(0, 500, 0, 260) }):Play()
+        TweenService:Create(title, EASE, { TextTransparency = 0 }):Play()
+        TweenService:Create(subtitle, EASE, { TextTransparency = 0 }):Play()
+        if showProgress then
+            TweenService:Create(progressText, EASE, { TextTransparency = 0 }):Play()
+            TweenService:Create(barTrack, EASE, { BackgroundTransparency = 0 }):Play()
+            TweenService:Create(barFill, EASE, { BackgroundTransparency = 0 }):Play()
+        end
+    end
+
+    local function fadeOut()
+        local FADE = 0.55
+        local EASE = TweenInfo.new(FADE, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+        TweenService:Create(container, EASE, { Size = UDim2.new(0, 440, 0, 230) }):Play()
+        TweenService:Create(title, EASE, { TextTransparency = 1 }):Play()
+        TweenService:Create(subtitle, EASE, { TextTransparency = 1 }):Play()
+        if showProgress then
+            TweenService:Create(progressText, EASE, { TextTransparency = 1 }):Play()
+            TweenService:Create(barTrack, EASE, { BackgroundTransparency = 1 }):Play()
+            TweenService:Create(barFill, EASE, { BackgroundTransparency = 1 }):Play()
+        end
+        task.delay(FADE * 0.35, function()
+            TweenService:Create(root, EASE, { BackgroundTransparency = 1 }):Play()
+        end)
+        task.delay(FADE + 0.05, function()
+            if root and root.Parent then root:Destroy() end
+        end)
+    end
+
+    local function setProgress(pct)
+        if not showProgress then return end
+        barFill.Size = UDim2.new(pct, 0, 1, 0)
+        progressText.Text = "Loading Assets " .. math.floor(pct * 100) .. "%"
+    end
+
+    return { Root = root, fadeIn = fadeIn, fadeOut = fadeOut, setProgress = setProgress }
+end
+
+-- =========================================================
+-- MAIN MENU
+-- =========================================================
+local MENU_W = 400
+local MENU_H = 560
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, MENU_W, 0, MENU_H)
+mainFrame.Position = UDim2.new(0.5, -MENU_W/2, 0.5, -MENU_H/2)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+mainFrame.Visible = false
+mainFrame.Active = true
+mainFrame.ZIndex = 5
+mainFrame.Parent = screenGui
+
+local mc = Instance.new("UICorner")
+mc.CornerRadius = UDim.new(0, 14)
+mc.Parent = mainFrame
+
+local ms = Instance.new("UIStroke")
+ms.Color = Color3.fromRGB(140, 110, 220)
+ms.Thickness = 1.5
+ms.Parent = mainFrame
+
+-- =========================================================
+-- Title Bar
+-- =========================================================
+local titleBar = Instance.new("Frame")
+titleBar.Name = "TitleBar"
+titleBar.Size = UDim2.new(1, 0, 0, 52)
+titleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+titleBar.BorderSizePixel = 0
+titleBar.Active = true
+titleBar.ZIndex = 6
+titleBar.Parent = mainFrame
+
+local tbc = Instance.new("UICorner")
+tbc.CornerRadius = UDim.new(0, 14)
+tbc.Parent = titleBar
+
+local fix = Instance.new("Frame")
+fix.Size = UDim2.new(1, 0, 0, 14)
+fix.Position = UDim2.new(0, 0, 1, -14)
+fix.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+fix.BorderSizePixel = 0
+fix.ZIndex = 6
+fix.Parent = titleBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -36, 1, 0)
+titleLabel.Position = UDim2.new(0, 18, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "BrookHaven Script Folder"
+titleLabel.TextColor3 = Color3.fromRGB(200, 170, 255)
+titleLabel.TextSize = 17
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.ZIndex = 7
+titleLabel.Parent = titleBar
+
+local accent = Instance.new("Frame")
+accent.Size = UDim2.new(1, 0, 0, 2)
+accent.Position = UDim2.new(0, 0, 1, -2)
+accent.BackgroundColor3 = Color3.fromRGB(180, 140, 255)
+accent.BorderSizePixel = 0
+accent.ZIndex = 7
+accent.Parent = titleBar
+
+-- =========================================================
+-- HELLO BOX
+-- =========================================================
+local bioFrame = Instance.new("Frame")
+bioFrame.Name = "HelloFrame"
+bioFrame.Size = UDim2.new(1, -24, 0, 54)
+bioFrame.Position = UDim2.new(0, 12, 0, 62)
+bioFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 40)
+bioFrame.BorderSizePixel = 0
+bioFrame.ZIndex = 6
+bioFrame.Parent = mainFrame
+
+local bioCorner = Instance.new("UICorner")
+bioCorner.CornerRadius = UDim.new(0, 10)
+bioCorner.Parent = bioFrame
+
+local bioStroke = Instance.new("UIStroke")
+bioStroke.Color = Color3.fromRGB(140, 110, 220)
+bioStroke.Thickness = 1
+bioStroke.Transparency = 0.5
+bioStroke.Parent = bioFrame
+
+local helloLabel = Instance.new("TextLabel")
+helloLabel.Size = UDim2.new(1, -28, 1, 0)
+helloLabel.Position = UDim2.new(0, 14, 0, 0)
+helloLabel.BackgroundTransparency = 1
+helloLabel.Text = "Hello " .. player.Name
+helloLabel.TextColor3 = Color3.fromRGB(240, 235, 255)
+helloLabel.TextSize = 16
+helloLabel.Font = Enum.Font.GothamMedium
+helloLabel.TextXAlignment = Enum.TextXAlignment.Left
+helloLabel.TextYAlignment = Enum.TextYAlignment.Center
+helloLabel.TextTruncate = Enum.TextTruncate.AtEnd
+helloLabel.ZIndex = 7
+helloLabel.Parent = bioFrame
+
+-- =========================================================
+-- Tab Bar
+-- =========================================================
+local tabBar = Instance.new("Frame")
+tabBar.Name = "TabBar"
+tabBar.Size = UDim2.new(1, -24, 0, 44)
+tabBar.Position = UDim2.new(0, 12, 0, 126)
+tabBar.BackgroundColor3 = Color3.fromRGB(25, 25, 36)
+tabBar.BorderSizePixel = 0
+tabBar.ZIndex = 6
+tabBar.Parent = mainFrame
+
+local tbCorner = Instance.new("UICorner")
+tbCorner.CornerRadius = UDim.new(0, 9)
+tbCorner.Parent = tabBar
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.Padding = UDim.new(0, 4)
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout.Parent = tabBar
+
+local tabPadding = Instance.new("UIPadding")
+tabPadding.PaddingLeft = UDim.new(0, 4)
+tabPadding.PaddingTop = UDim.new(0, 5)
+tabPadding.PaddingBottom = UDim.new(0, 5)
+tabPadding.Parent = tabBar
+
+-- =========================================================
+-- Content
+-- =========================================================
+local content = Instance.new("Frame")
+content.Name = "Content"
+content.Size = UDim2.new(1, -24, 1, -248)
+content.Position = UDim2.new(0, 12, 0, 180)
+content.BackgroundTransparency = 1
+content.BorderSizePixel = 0
+content.ZIndex = 6
+content.Parent = mainFrame
+
+-- =========================================================
+-- Credit + Footer
+-- =========================================================
+local creditLabel = Instance.new("TextLabel")
+creditLabel.Size = UDim2.new(1, -24, 0, 22)
+creditLabel.Position = UDim2.new(0, 12, 1, -58)
+creditLabel.BackgroundTransparency = 1
+creditLabel.Text = "Made By: dotModelx"
+creditLabel.TextColor3 = Color3.fromRGB(180, 180, 220)
+creditLabel.TextSize = 13
+creditLabel.Font = Enum.Font.GothamBold
+creditLabel.TextXAlignment = Enum.TextXAlignment.Center
+creditLabel.ZIndex = 6
+creditLabel.Parent = mainFrame
+
+local footer = Instance.new("TextLabel")
+footer.Size = UDim2.new(1, -24, 0, 20)
+footer.Position = UDim2.new(0, 12, 1, -30)
+footer.BackgroundTransparency = 1
+footer.Text = "BrookHaven Script Folder  -  v3.1"
+footer.TextColor3 = Color3.fromRGB(120, 120, 140)
+footer.TextSize = 10
+footer.Font = Enum.Font.Gotham
+footer.ZIndex = 6
+footer.Parent = mainFrame
+
+-- =========================================================
+-- SUPPORT TAB LINK HANDLER
+-- =========================================================
+local SUPPORT_URL = "https://www.rblxscripts.net/users/Hackerz"
+
+local function showCopiedToast()
+    local toast = Instance.new("TextLabel")
+    toast.Size = UDim2.new(0, 220, 0, 40)
+    toast.Position = UDim2.new(0.5, -110, 0.85, 0)
+    toast.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+    toast.Text = "Copied To Clipboard!"
+    toast.TextColor3 = Color3.fromRGB(200, 255, 200)
+    toast.TextSize = 14
+    toast.Font = Enum.Font.GothamBold
+    toast.BorderSizePixel = 0
+    toast.BackgroundTransparency = 1
+    toast.TextTransparency = 1
+    toast.ZIndex = 200
+    toast.Parent = screenGui
+
+    local tc = Instance.new("UICorner")
+    tc.CornerRadius = UDim.new(0, 8)
+    tc.Parent = toast
+
+    local ts = Instance.new("UIStroke")
+    ts.Color = Color3.fromRGB(120, 200, 120)
+    ts.Thickness = 1.5
+    ts.Transparency = 1
+    ts.Parent = toast
+
+    TweenService:Create(toast, TweenInfo.new(0.2), {
+        BackgroundTransparency = 0.1, TextTransparency = 0
+    }):Play()
+    TweenService:Create(ts, TweenInfo.new(0.2), { Transparency = 0.2 }):Play()
+
+    task.delay(2, function()
+        local fadeOut = TweenService:Create(toast, TweenInfo.new(0.3), {
+            BackgroundTransparency = 1, TextTransparency = 1
+        })
+        fadeOut:Play()
+        TweenService:Create(ts, TweenInfo.new(0.3), { Transparency = 1 }):Play()
+        fadeOut.Completed:Connect(function()
+            toast:Destroy()
+        end)
+    end)
+end
+
+local function handleSupportClick()
+    -- Try to open in browser; fall back to clipboard
+    local opened = false
+    pcall(function()
+        if setclipboard then
+            setclipboard(SUPPORT_URL)
+        end
+    end)
+    -- Some executors expose a "request"/"openbrowser" helper — try the common names
+    pcall(function()
+        if request then
+            request({Url = SUPPORT_URL, Method = "GET"})
+            opened = true
+        end
+    end)
+    pcall(function()
+        if openbrowser then
+            openbrowser(SUPPORT_URL)
+            opened = true
+        end
+    end)
+
+    -- Always show the "Copied" toast — the URL is in the clipboard either way
+    showCopiedToast()
+end
+
+-- =========================================================
+-- TAB DATA — Support Me + Keyless + Needs Key
+-- =========================================================
+local TABS = {
+    {
+        Name = "Support Me!",
+        Author = "Made By: dotModelx",
+        Color = Color3.fromRGB(120, 220, 180),
+        IsSupport = true,
+        Scripts = {},
+    },
+    {
+        Name = "Keyless",
+        Author = "Made By: dotModelx",
+        Color = Color3.fromRGB(90, 120, 255),
+        Scripts = {
+            {
+                Name = "SP Hub Brookhaven",
+                Author = "Made By: Bugxie",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/as6cd0/SP_Hub/refs/heads/main/Brookhaven"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui.Name:lower():find("sp") and gui.Name:lower():find("hub") then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "Hexagon Brookhaven",
+                Author = "Made By: PancakeReal",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/nxvap/Hexagon/refs/heads/main/brookhaven"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui.Name:lower():find("hexagon") then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "SAGAZX Hub",
+                Author = "Made By: a_guy_is_constipated",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-SAGAZx-222796"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui.Name:lower():find("sagaz") then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "Nothing Panel",
+                Author = "Made By: Cat_Wenda2nd",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-Nothing-Panel-223707"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui.Name:lower():find("nothing") then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "Sander XY",
+                Author = "Made By: SanderDev",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/kigredns/testUIDK/refs/heads/main/panel.lua"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui.Name:lower():find("sander") then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "IDK HUB",
+                Author = "Made By: HexHubX",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/HexHubX/Main/refs/heads/main/AutoFarm%20Brookhaven.lua"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui.Name:lower():find("idk") then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "Torium Hub",
+                Author = "Made By: Sw1ntuz",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/musha9melnykmuhail-bot/Brookhaven-V2/refs/heads/main/EzOpenSource"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and (gui.Name:lower():find("torium") or gui.Name:lower():find("ez")) then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "KAISER_V1",
+                Author = "Made By: Lord_kaiser1256",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/SUPREMEAURA350/KAISER-VERSION-2-/refs/heads/main/Kaiserspam"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui.Name:lower():find("kaiser") then gui:Destroy() end
+                    end
+                end,
+            },
+        },
+    },
+    {
+        Name = "Needs Key",
+        Author = "Made By: dotModelx",
+        Color = Color3.fromRGB(255, 160, 60),
+        Scripts = {
+            {
+                Name = "Overflow Hub",
+                Author = "Made By: OverFlow",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://overflow.cx/loader.html"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and (gui.Name:lower():find("overflow") or gui.Name:lower():find("ovf")) then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "CARNAGE",
+                Author = "Made By: Terrordrome",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://carnage-lua-api.carnage.workers.dev/lx"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui.Name:lower():find("carnage") then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "Bloom Scripts",
+                Author = "Made By: BloomScripts",
+                OnEnable = function()
+                    task.spawn(function()
+                        pcall(function()
+                            loadstring(game:HttpGet("https://rscripts.net/api/telemetry/v2/client.lua?s=6aa33616b7254cb28fabd686"))()
+                        end)
+                    end)
+                    loadstring(game:HttpGet("https://scripts.vairoscripts.com/loader/brookhaven.lua"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and (gui.Name:lower():find("bloom") or gui.Name:lower():find("vairo")) then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "Lunar Hub",
+                Author = "Made By: lunarhub",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://api.jnkie.com/api/v1/luascripts/public/4b18d970c2d9f8dd0d1d0af2062dbd15bd34d1b801eca581c9a456016683ca47/download"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui.Name:lower():find("lunar") then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "Axon Hub",
+                Author = "Made By: AxonHub",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/97c3f6db55a2cf72141537a85458e5a7.lua"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui.Name:lower():find("axon") then gui:Destroy() end
+                    end
+                end,
+            },
+            {
+                Name = "Snowy Hub",
+                Author = "Made By: SnowyScripts",
+                OnEnable = function()
+                    loadstring(game:HttpGet("https://flowauth.net/v1/ui/a87f00d9adf63658655fcd02ab86a4ef.lua"))()
+                end,
+                OnDisable = function()
+                    local pg = player:FindFirstChild("PlayerGui")
+                    if not pg then return end
+                    for _, gui in ipairs(pg:GetChildren()) do
+                        if gui:IsA("ScreenGui") and (gui.Name:lower():find("snowy") or gui.Name:lower():find("flowauth")) then gui:Destroy() end
+                    end
+                end,
+            },
+        },
+    },
+}
+
+-- =========================================================
+-- Build panels
+-- =========================================================
+local tabPanels = {}
+local tabButtons = {}
+
+local function buildTabPanel(tabData, index)
+    local panel = Instance.new("Frame")
+    panel.Name = "Panel" .. index
+    panel.Size = UDim2.new(1, 0, 1, 0)
+    panel.BackgroundTransparency = 1
+    panel.BorderSizePixel = 0
+    panel.Visible = false
+    panel.ZIndex = 6
+    panel.Parent = content
+
+    -- Support Me panel — special layout
+    if tabData.IsSupport then
+        local info = Instance.new("TextLabel")
+        info.Size = UDim2.new(1, 0, 0, 40)
+        info.Position = UDim2.new(0, 0, 0, 20)
+        info.BackgroundTransparency = 1
+        info.Text = "Thanks for using BrookHaven Script Folder!"
+        info.TextColor3 = Color3.fromRGB(220, 220, 240)
+        info.TextSize = 14
+        info.Font = Enum.Font.GothamMedium
+        info.TextXAlignment = Enum.TextXAlignment.Center
+        info.ZIndex = 7
+        info.Parent = panel
+
+        local linkCard = Instance.new("TextButton")
+        linkCard.Size = UDim2.new(1, 0, 0, 100)
+        linkCard.Position = UDim2.new(0, 0, 0, 90)
+        linkCard.BackgroundColor3 = Color3.fromRGB(35, 45, 40)
+        linkCard.BorderSizePixel = 0
+        linkCard.Text = ""
+        linkCard.AutoButtonColor = false
+        linkCard.ZIndex = 6
+        linkCard.Parent = panel
+
+        local lcCorner = Instance.new("UICorner")
+        lcCorner.CornerRadius = UDim.new(0, 10)
+        lcCorner.Parent = linkCard
+
+        local lcStroke = Instance.new("UIStroke")
+        lcStroke.Color = Color3.fromRGB(120, 220, 180)
+        lcStroke.Thickness = 1.5
+        lcStroke.Transparency = 0.3
+        lcStroke.Parent = linkCard
+
+        local cardTitle = Instance.new("TextLabel")
+        cardTitle.Size = UDim2.new(1, -24, 0, 24)
+        cardTitle.Position = UDim2.new(0, 14, 0, 14)
+        cardTitle.BackgroundTransparency = 1
+        cardTitle.Text = "Support Me"
+        cardTitle.TextColor3 = Color3.fromRGB(120, 220, 180)
+        cardTitle.TextSize = 16
+        cardTitle.Font = Enum.Font.GothamBold
+        cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+        cardTitle.ZIndex = 7
+        cardTitle.Parent = linkCard
+
+        local cardLink = Instance.new("TextLabel")
+        cardLink.Size = UDim2.new(1, -24, 0, 20)
+        cardLink.Position = UDim2.new(0, 14, 0, 42)
+        cardLink.BackgroundTransparency = 1
+        cardLink.Text = SUPPORT_URL
+        cardLink.TextColor3 = Color3.fromRGB(200, 255, 220)
+        cardLink.TextSize = 12
+        cardLink.Font = Enum.Font.GothamMedium
+        cardLink.TextXAlignment = Enum.TextXAlignment.Left
+        cardLink.TextTruncate = Enum.TextTruncate.AtEnd
+        cardLink.ZIndex = 7
+        cardLink.Parent = linkCard
+
+        local cardHint = Instance.new("TextLabel")
+        cardHint.Size = UDim2.new(1, -24, 0, 18)
+        cardHint.Position = UDim2.new(0, 14, 0, 68)
+        cardHint.BackgroundTransparency = 1
+        cardHint.Text = "Click to open or copy link"
+        cardHint.TextColor3 = Color3.fromRGB(150, 200, 170)
+        cardHint.TextSize = 11
+        cardHint.Font = Enum.Font.Gotham
+        cardHint.TextXAlignment = Enum.TextXAlignment.Left
+        cardHint.ZIndex = 7
+        cardHint.Parent = linkCard
+
+        linkCard.MouseEnter:Connect(function()
+            linkCard.BackgroundColor3 = Color3.fromRGB(45, 60, 52)
+            lcStroke.Transparency = 0
+        end)
+        linkCard.MouseLeave:Connect(function()
+            linkCard.BackgroundColor3 = Color3.fromRGB(35, 45, 40)
+            lcStroke.Transparency = 0.3
+        end)
+        linkCard.MouseButton1Click:Connect(handleSupportClick)
+
+        return panel
+    end
+
+    -- Normal script list panel
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Name = "List"
+    scroll.Size = UDim2.new(1, 0, 1, 0)
+    scroll.BackgroundTransparency = 1
+    scroll.BorderSizePixel = 0
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.ScrollBarThickness = 6
+    scroll.ScrollBarImageColor3 = tabData.Color
+    scroll.ZIndex = 6
+    scroll.Parent = panel
+
+    local l = Instance.new("UIListLayout")
+    l.Padding = UDim.new(0, 10)
+    l.SortOrder = Enum.SortOrder.LayoutOrder
+    l.Parent = scroll
+
+    l:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        scroll.CanvasSize = UDim2.new(0, 0, 0, l.AbsoluteContentSize.Y + 10)
+    end)
+
+    local entries = {}
+
+    local function setEntryStyle(i, active)
+        local entry = entries[i]
+        if not entry then return end
+        if active then
+            entry.Background.BackgroundColor3 = tabData.Color
+            entry.Stroke.Color = tabData.Color
+            entry.Stroke.Transparency = 0
+            entry.NumberLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            entry.NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            entry.AuthorLabel.TextColor3 = Color3.fromRGB(235, 235, 255)
+            entry.Badge.Text = "ON"
+            entry.Badge.TextColor3 = Color3.fromRGB(255, 255, 255)
+        else
+            entry.Background.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
+            entry.Stroke.Color = Color3.fromRGB(70, 70, 100)
+            entry.Stroke.Transparency = 0.4
+            entry.NumberLabel.TextColor3 = Color3.fromRGB(160, 160, 180)
+            entry.NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            entry.AuthorLabel.TextColor3 = Color3.fromRGB(160, 160, 180)
+            entry.Badge.Text = "OFF"
+            entry.Badge.TextColor3 = Color3.fromRGB(160, 160, 180)
+        end
+    end
+
+    for i, scriptDef in ipairs(tabData.Scripts) do
+        local entry = Instance.new("TextButton")
+        entry.Name = "Entry" .. i
+        entry.Size = UDim2.new(1, 0, 0, 72)
+        entry.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
+        entry.BorderSizePixel = 0
+        entry.Text = ""
+        entry.AutoButtonColor = false
+        entry.LayoutOrder = i
+        entry.ZIndex = 6
+        entry.Parent = scroll
+
+        local ec = Instance.new("UICorner")
+        ec.CornerRadius = UDim.new(0, 9)
+        ec.Parent = entry
+
+        local es = Instance.new("UIStroke")
+        es.Color = Color3.fromRGB(70, 70, 100)
+        es.Thickness = 1
+        es.Transparency = 0.4
+        es.Parent = entry
+
+        local numLabel = Instance.new("TextLabel")
+        numLabel.Name = "NumberLabel"
+        numLabel.Size = UDim2.new(0, 34, 1, 0)
+        numLabel.Position = UDim2.new(0, 12, 0, 0)
+        numLabel.BackgroundTransparency = 1
+        numLabel.Text = tostring(i) .. "."
+        numLabel.TextColor3 = Color3.fromRGB(160, 160, 180)
+        numLabel.TextSize = 15
+        numLabel.Font = Enum.Font.GothamBold
+        numLabel.TextXAlignment = Enum.TextXAlignment.Left
+        numLabel.ZIndex = 7
+        numLabel.Parent = entry
+
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Name = "NameLabel"
+        nameLabel.Size = UDim2.new(1, -120, 0, 22)
+        nameLabel.Position = UDim2.new(0, 48, 0, 14)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.Text = scriptDef.Name
+        nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        nameLabel.TextSize = 15
+        nameLabel.Font = Enum.Font.GothamBold
+        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+        nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+        nameLabel.ZIndex = 7
+        nameLabel.Parent = entry
+
+        local authorLabel = Instance.new("TextLabel")
+        authorLabel.Name = "AuthorLabel"
+        authorLabel.Size = UDim2.new(1, -120, 0, 18)
+        authorLabel.Position = UDim2.new(0, 48, 0, 38)
+        authorLabel.BackgroundTransparency = 1
+        authorLabel.Text = scriptDef.Author or ""
+        authorLabel.TextColor3 = Color3.fromRGB(160, 160, 180)
+        authorLabel.TextSize = 12
+        authorLabel.Font = Enum.Font.Gotham
+        authorLabel.TextXAlignment = Enum.TextXAlignment.Left
+        authorLabel.TextTruncate = Enum.TextTruncate.AtEnd
+        authorLabel.ZIndex = 7
+        authorLabel.Parent = entry
+
+        local badge = Instance.new("TextLabel")
+        badge.Name = "Badge"
+        badge.Size = UDim2.new(0, 46, 0, 24)
+        badge.Position = UDim2.new(1, -60, 0.5, -12)
+        badge.BackgroundTransparency = 1
+        badge.Text = "OFF"
+        badge.TextColor3 = Color3.fromRGB(160, 160, 180)
+        badge.TextSize = 13
+        badge.Font = Enum.Font.GothamBold
+        badge.ZIndex = 7
+        badge.Parent = entry
+
+        entries[i] = {
+            Background = entry,
+            Stroke = es,
+            NumberLabel = numLabel,
+            NameLabel = nameLabel,
+            AuthorLabel = authorLabel,
+            Badge = badge,
+            Def = scriptDef,
+            Active = false,
+            SetStyle = function(active) setEntryStyle(i, active) end,
+        }
+
+        entry.MouseButton1Click:Connect(function()
+            local data = entries[i]
+            if data.Active then
+                data.Active = false
+                setEntryStyle(i, false)
+                if scriptDef.OnDisable then
+                    local okk, err = pcall(scriptDef.OnDisable)
+                    if not okk then
+                        warn("[BrookHaven] OnDisable error: " .. tostring(err))
+                    end
+                end
+            else
+                data.Active = true
+                setEntryStyle(i, true)
+                local okk, err = pcall(scriptDef.OnEnable)
+                if not okk then
+                    warn("[BrookHaven] OnEnable error in '" .. scriptDef.Name .. "': " .. tostring(err))
+                    data.Active = false
+                    setEntryStyle(i, false)
+                end
+            end
+        end)
+
+        entry.MouseEnter:Connect(function()
+            if not entries[i].Active then
+                entry.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+            end
+        end)
+        entry.MouseLeave:Connect(function()
+            if not entries[i].Active then
+                entry.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
+            end
+        end)
+    end
+
+    -- "Disable All" on Needs Key
+    if tabData.Name == "Needs Key" then
+        local disableAll = Instance.new("TextButton")
+        disableAll.Name = "DisableAll"
+        disableAll.Size = UDim2.new(1, 0, 0, 40)
+        disableAll.BackgroundColor3 = Color3.fromRGB(60, 30, 40)
+        disableAll.BorderSizePixel = 0
+        disableAll.Text = "Disable All Scripts"
+        disableAll.TextColor3 = Color3.fromRGB(255, 160, 160)
+        disableAll.TextSize = 13
+        disableAll.Font = Enum.Font.GothamBold
+        disableAll.AutoButtonColor = false
+        disableAll.LayoutOrder = 999
+        disableAll.ZIndex = 7
+        disableAll.Parent = scroll
+
+        local dac = Instance.new("UICorner")
+        dac.CornerRadius = UDim.new(0, 8)
+        dac.Parent = disableAll
+
+        disableAll.MouseEnter:Connect(function()
+            disableAll.BackgroundColor3 = Color3.fromRGB(90, 40, 55)
+        end)
+        disableAll.MouseLeave:Connect(function()
+            disableAll.BackgroundColor3 = Color3.fromRGB(60, 30, 40)
+        end)
+
+        disableAll.MouseButton1Click:Connect(function()
+            for _, entry in ipairs(entries) do
+                if entry.Active then
+                    entry.Active = false
+                    entry.SetStyle(false)
+                    if entry.Def.OnDisable then
+                        pcall(entry.Def.OnDisable)
+                    end
+                end
+            end
+        end)
+    end
+
+    return panel
+end
+
+for i, tabData in ipairs(TABS) do
+    local btn = Instance.new("TextButton")
+    btn.Name = "Tab" .. i
+    btn.Size = UDim2.new(0, 0, 1, 0)
+    btn.AutomaticSize = Enum.AutomaticSize.X
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
+    btn.BorderSizePixel = 0
+    btn.Text = tabData.Name
+    btn.TextColor3 = Color3.fromRGB(180, 180, 200)
+    btn.TextSize = 13
+    btn.Font = Enum.Font.GothamBold
+    btn.AutoButtonColor = false
+    btn.LayoutOrder = i
+    btn.ZIndex = 7
+    btn.Parent = tabBar
+
+    local bc = Instance.new("UICorner")
+    bc.CornerRadius = UDim.new(0, 7)
+    bc.Parent = btn
+
+    local bp = Instance.new("UIPadding")
+    bp.PaddingLeft = UDim.new(0, 12)
+    bp.PaddingRight = UDim.new(0, 12)
+    bp.Parent = btn
+
+    tabButtons[i] = { Button = btn, Def = tabData }
+    tabPanels[i] = buildTabPanel(tabData, i)
+end
+
+local function switchTab(index)
+    for i, btnData in ipairs(tabButtons) do
+        if i == index then
+            btnData.Button.BackgroundColor3 = btnData.Def.Color
+            btnData.Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        else
+            btnData.Button.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
+            btnData.Button.TextColor3 = Color3.fromRGB(180, 180, 200)
+        end
+    end
+    for i, panel in ipairs(tabPanels) do
+        panel.Visible = (i == index)
+    end
+    creditLabel.Text = TABS[index].Author
+end
+
+for i, btnData in ipairs(tabButtons) do
+    btnData.Button.MouseButton1Click:Connect(function()
+        switchTab(i)
+    end)
+end
+
+-- =========================================================
+-- Menu Open / Close
+-- =========================================================
+local isOpen = false
+local isAnimating = false
+local menuLocked = true
+
+local function openMenu()
+    if isOpen or isAnimating then return end
+    isOpen = true
+    isAnimating = true
+    mainFrame.Visible = true
+    mainFrame.Size = UDim2.new(0, MENU_W, 0, 0)
+    local t = TweenService:Create(mainFrame, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, MENU_W, 0, MENU_H)
+    })
+    t:Play()
+    t.Completed:Connect(function() isAnimating = false end)
+end
+
+local function closeMenu()
+    if not isOpen or isAnimating then return end
+    isOpen = false
+    isAnimating = true
+    local t = TweenService:Create(mainFrame, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, MENU_W, 0, 0)
+    })
+    t:Play()
+    t.Completed:Connect(function()
+        mainFrame.Visible = false
+        isAnimating = false
+    end)
+end
+
+local function toggleMenu()
+    if menuLocked then return end
+    if isOpen then closeMenu() else openMenu() end
+end
+
+-- Right Shift
+local lastToggle = 0
+local DEBOUNCE = 0.25
+local function safeToggle()
+    local now = tick()
+    if now - lastToggle < DEBOUNCE then return end
+    lastToggle = now
+    toggleMenu()
+end
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.RightShift then
+        safeToggle()
+    end
+end)
+
+pcall(function()
+    ContextActionService:BindAction("BrookHavenToggleRS", function(_, state)
+        if state == Enum.UserInputState.Begin then safeToggle() end
+        return Enum.ContextActionResult.Pass
+    end, false, Enum.KeyCode.RightShift)
+end)
+
+-- Drag
+local draggingFrame = false
+local frameDragStart, frameStartPos
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingFrame = true
+        frameDragStart = input.Position
+        frameStartPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                draggingFrame = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if draggingFrame and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - frameDragStart
+        mainFrame.Position = UDim2.new(
+            frameStartPos.X.Scale, frameStartPos.X.Offset + delta.X,
+            frameStartPos.Y.Scale, frameStartPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- =========================================================
+-- LOADING + INIT
+-- =========================================================
+switchTab(1)  -- Support Me! opens first
+
+local introScreen = buildLoadingScreen(
+    "Welcome " .. player.Name,
+    "Tip: Click Right Shift To Open/Close The Menu!",
+    true
+)
+
+introScreen.fadeIn()
+
+task.spawn(function()
+    local LOAD_TIME = 7
+    local startTime = tick()
+
+    while true do
+        local elapsed = tick() - startTime
+        local pct = math.clamp(elapsed / LOAD_TIME, 0, 1)
+        introScreen.setProgress(pct)
+        if pct >= 1 then break end
+        RunService.Heartbeat:Wait()
+    end
+
+    introScreen.setProgress(1)
+    task.wait(0.3)
+    introScreen.fadeOut()
+    task.wait(0.6)
+
+    menuLocked = false
+    openMenu()
+end)
+
+print("[BrookHaven Script Folder] Loaded - Made By: dotModelx (Right Shift to toggle)")
