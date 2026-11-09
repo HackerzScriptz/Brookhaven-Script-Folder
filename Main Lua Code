@@ -1,6 +1,6 @@
 -- BrookHaven Script Folder
--- Full script — v3.1
--- Made By: dotModelx
+-- Full script — v3.2
+-- Made By: Hackerz
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -362,7 +362,7 @@ local creditLabel = Instance.new("TextLabel")
 creditLabel.Size = UDim2.new(1, -24, 0, 22)
 creditLabel.Position = UDim2.new(0, 12, 1, -58)
 creditLabel.BackgroundTransparency = 1
-creditLabel.Text = "Made By: dotModelx"
+creditLabel.Text = "Made By: Hackerz"
 creditLabel.TextColor3 = Color3.fromRGB(180, 180, 220)
 creditLabel.TextSize = 13
 creditLabel.Font = Enum.Font.GothamBold
@@ -374,7 +374,7 @@ local footer = Instance.new("TextLabel")
 footer.Size = UDim2.new(1, -24, 0, 20)
 footer.Position = UDim2.new(0, 12, 1, -30)
 footer.BackgroundTransparency = 1
-footer.Text = "BrookHaven Script Folder  -  v3.1"
+footer.Text = "BrookHaven Script Folder  -  v3.2"
 footer.TextColor3 = Color3.fromRGB(120, 120, 140)
 footer.TextSize = 10
 footer.Font = Enum.Font.Gotham
@@ -429,45 +429,32 @@ local function showCopiedToast()
 end
 
 local function handleSupportClick()
-    -- Try to open in browser; fall back to clipboard
-    local opened = false
     pcall(function()
-        if setclipboard then
-            setclipboard(SUPPORT_URL)
-        end
-    end)
-    -- Some executors expose a "request"/"openbrowser" helper — try the common names
-    pcall(function()
-        if request then
-            request({Url = SUPPORT_URL, Method = "GET"})
-            opened = true
-        end
+        if setclipboard then setclipboard(SUPPORT_URL) end
     end)
     pcall(function()
-        if openbrowser then
-            openbrowser(SUPPORT_URL)
-            opened = true
-        end
+        if request then request({Url = SUPPORT_URL, Method = "GET"}) end
     end)
-
-    -- Always show the "Copied" toast — the URL is in the clipboard either way
+    pcall(function()
+        if openbrowser then openbrowser(SUPPORT_URL) end
+    end)
     showCopiedToast()
 end
 
 -- =========================================================
--- TAB DATA — Support Me + Keyless + Needs Key
+-- TAB DATA
 -- =========================================================
 local TABS = {
     {
         Name = "Support Me!",
-        Author = "Made By: dotModelx",
+        Author = "Made By: Hackerz",
         Color = Color3.fromRGB(120, 220, 180),
         IsSupport = true,
         Scripts = {},
     },
     {
         Name = "Keyless",
-        Author = "Made By: dotModelx",
+        Author = "Made By: Hackerz",
         Color = Color3.fromRGB(90, 120, 255),
         Scripts = {
             {
@@ -586,7 +573,7 @@ local TABS = {
     },
     {
         Name = "Needs Key",
-        Author = "Made By: dotModelx",
+        Author = "Made By: Hackerz",
         Color = Color3.fromRGB(255, 160, 60),
         Scripts = {
             {
@@ -698,7 +685,6 @@ local function buildTabPanel(tabData, index)
     panel.ZIndex = 6
     panel.Parent = content
 
-    -- Support Me panel — special layout
     if tabData.IsSupport then
         local info = Instance.new("TextLabel")
         info.Size = UDim2.new(1, 0, 0, 40)
@@ -782,7 +768,6 @@ local function buildTabPanel(tabData, index)
         return panel
     end
 
-    -- Normal script list panel
     local scroll = Instance.new("ScrollingFrame")
     scroll.Name = "List"
     scroll.Size = UDim2.new(1, 0, 1, 0)
@@ -951,7 +936,6 @@ local function buildTabPanel(tabData, index)
         end)
     end
 
-    -- "Disable All" on Needs Key
     if tabData.Name == "Needs Key" then
         local disableAll = Instance.new("TextButton")
         disableAll.Name = "DisableAll"
@@ -1137,7 +1121,7 @@ end)
 -- =========================================================
 -- LOADING + INIT
 -- =========================================================
-switchTab(1)  -- Support Me! opens first
+switchTab(1)
 
 local introScreen = buildLoadingScreen(
     "Welcome " .. player.Name,
@@ -1168,4 +1152,4 @@ task.spawn(function()
     openMenu()
 end)
 
-print("[BrookHaven Script Folder] Loaded - Made By: dotModelx (Right Shift to toggle)")
+print("[BrookHaven Script Folder] Loaded - Made By: Hackerz (Right Shift to toggle)")
